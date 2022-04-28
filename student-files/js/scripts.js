@@ -71,6 +71,17 @@ function generateModal(data) {
 
     document.querySelectorAll('#modal-prev')
        .forEach( button => {button.addEventListener('click', () => prevModal() ) });
+
+    document.addEventListener('keyup', (e) => {
+        if (document.getElementById('active-modal') !== null) {
+            if (e.key === "ArrowRight") {
+                document.querySelector('#modal-next').click()
+            }
+            if (e.key === "ArrowLeft") {
+                document.querySelector('#modal-prev').click()
+            }
+        }
+    })
     
     document.querySelectorAll('div.modal-container')
        .forEach( modal => modal.style.display = 'none');
@@ -102,39 +113,38 @@ function generateSearchBar(data) {
      });
 }
 
-function searchFilter(data, searchQuery) {
-        // An empty array where search results will be pushed to
-        const searchResults = [];
-        
-        //Convert users search query to lowercase so that search can be case insensitive
-        
-        searchQuery = searchQuery.toLowerCase();
-        
+function searchFilter(employeeList, searchQuery) {
         //Reset items on page
         document.getElementById('gallery').innerHTML = '';
-        
-        //Loop through 'data'
-        for (let i = 0; i < data.length; i++) {
-           //Create string containing the employees first and last names and convert to lowercase
-           const employeeFullName = `${data[i].name.first.toLowerCase()} ${data[i].name.last.toLowerCase()}`;
-           
-           //Push results into searchResults array
-           if (employeeFullName.includes(searchQuery)) {
-              searchResults.push(data[i]);
-           }
-        }
+        document.querySelectorAll('div.modal-container')
+            .forEach( modal => modal.remove() )
+
+        //Convert users search query to lowercase so that search can be case insensitive
+        searchQuery = searchQuery.toLowerCase();
+
+        // An empty array where search results will be pushed to
+        const searchResults = [];
+    
+        employeeList.forEach( employee =>  {
+            let employeeFullName = `${employee.name.first.toLowerCase()} ${employee.name.last.toLowerCase()}`;
+
+            if (employeeFullName.includes(searchQuery)) {
+              searchResults.push(employee);
+            }
+        })
     generateEmployees(searchResults);
+    generateModal(searchResults);
 }
 
 function getCardIndex(e) {
-    const  employeeArray = Array.from(document.querySelectorAll('div.card'));
-    const employeeIndex = employeeArray.indexOf(e.target.closest('div.card'));
-    return employeeIndex;
+    const  employeeCardArray = Array.from(document.querySelectorAll('div.card'));
+    const employeeCardIndex = employeeCardArray.indexOf(e.target.closest('div.card'));
+    return employeeCardIndex;
 }
 
 function showModal(modal) {
     modal.style.display = 'block';
-    modal.setAttribute('id', 'active' );
+    modal.setAttribute('id', 'active-modal' );
 }
 
 function showModalOnClick(e) {
@@ -143,15 +153,15 @@ function showModalOnClick(e) {
 }
 
 function closeActiveModal() {
-    const activeModal = document.getElementById('active');
+    const activeModal = document.getElementById('active-modal');
     activeModal.style.display = 'none';
     activeModal.removeAttribute('id');       
 }
 
 function getModalIndex() {
-    const  employeeArray = Array.from(document.querySelectorAll('div.modal-container'));
-    const employeeIndex = employeeArray.indexOf(document.querySelector('#active'));
-    return employeeIndex;
+    const  modalArray = Array.from(document.querySelectorAll('div.modal-container'));
+    const modalIndex = modalArray.indexOf(document.getElementById('active-modal'));
+    return modalIndex;
 }
 
 function nextModal() {
@@ -165,4 +175,5 @@ function prevModal() {
     closeActiveModal();
     showModal(prevModal)
 }
+
 
