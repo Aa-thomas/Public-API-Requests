@@ -1,3 +1,5 @@
+fetchData('https://randomuser.me/api/?results=12&nat=us');
+
 //fetches data from randomuser API
 function fetchData(url) {
     return fetch(url)
@@ -20,11 +22,6 @@ function checkStatus(response) {
     }
 }
 
-const userData = fetchData('https://randomuser.me/api/?results=12&nat=us');
-
-
-
-
 function generateEmployees(data) {
     for(let i = 0; i < data.length; i++) {
         const gallery = `<div class="card">
@@ -40,31 +37,43 @@ function generateEmployees(data) {
         document.getElementById('gallery').insertAdjacentHTML('beforeend', gallery)    
     }
     document.querySelectorAll('div.card')
-        .forEach( card => card.addEventListener('click', (event) => showModal(event)))
+        .forEach( card => card.addEventListener('click', (event) => showModalOnClick(event)))
 }
 
 function generateModal(data) {
     for(let i = 0; i < data.length; i++) {
-    const modal = `<div class="modal-container">
-        <div class="modal">
-        <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
-        <div class="modal-info-container">
-        <img class="modal-img" src="${data[i].picture.large}" alt="profile picture">
-        <h3 id="name" class="modal-name cap">${data[i].name.first} ${data[i].name.last}</h3>
-        <p class="modal-text">${data[i].email}</p>
-        <p class="modal-text cap">${data[i].location.city}</p>
-        <hr>
-        <p class="modal-text">${data[i].phone}</p>
-        <p class="modal-text">${data[i].location.street.number} ${data[i].location.street.name}, ${data[i].location.city}, ${data[i].location.state} ${data[i].location.postcode}</p>
-        <p class="modal-text">Birthday: birthday</p>
-        </div>
-        </div>`;
-    document.querySelector('body').insertAdjacentHTML('beforeend', modal);
+        const modal = `<div class="modal-container">
+            <div class="modal">
+            <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
+            <div class="modal-info-container">
+            <img class="modal-img" src="${data[i].picture.large}" alt="profile picture">
+            <h3 id="name" class="modal-name cap">${data[i].name.first} ${data[i].name.last}</h3>
+            <p class="modal-text">${data[i].email}</p>
+            <p class="modal-text cap">${data[i].location.city}</p>
+            <hr>
+            <p class="modal-text">${data[i].phone}</p>
+            <p class="modal-text">${data[i].location.street.number} ${data[i].location.street.name}, ${data[i].location.city}, ${data[i].location.state} ${data[i].location.postcode}</p>
+            <p class="modal-text">Birthday: birthday</p>
+            </div>
+            </div>
+            <div class="modal-btn-container">
+            <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
+            <button type="button" id="modal-next" class="modal-next btn">Next</button>
+            </div>
+            </div>`;
+        document.querySelector('body').insertAdjacentHTML('beforeend', modal);
     }
     document.querySelectorAll('#modal-close-btn')
-        .forEach( button => button.addEventListener('click', () => closeModal() ) );
+        .forEach( button => button.addEventListener('click', () => closeActiveModal() ) );
     
-    closeModal();
+    document.querySelectorAll('#modal-next')
+       .forEach( button => {button.addEventListener('click', () => nextModal() ) });
+
+    document.querySelectorAll('#modal-prev')
+       .forEach( button => {button.addEventListener('click', () => prevModal() ) });
+    
+    document.querySelectorAll('div.modal-container')
+       .forEach( modal => modal.style.display = 'none');
     
 }
 
@@ -93,14 +102,13 @@ function generateSearchBar(data) {
      });
 }
 
-
 function searchFilter(data, searchQuery) {
         // An empty array where search results will be pushed to
         const searchResults = [];
         
         //Convert users search query to lowercase so that search can be case insensitive
         
-        searchQuery.toLowerCase();
+        searchQuery = searchQuery.toLowerCase();
         
         //Reset items on page
         document.getElementById('gallery').innerHTML = '';
@@ -117,19 +125,44 @@ function searchFilter(data, searchQuery) {
         }
     generateEmployees(searchResults);
 }
-function getIndex(e) {
+
+function getCardIndex(e) {
     const  employeeArray = Array.from(document.querySelectorAll('div.card'));
     const employeeIndex = employeeArray.indexOf(e.target.closest('div.card'));
     return employeeIndex;
 }
 
-function showModal(e) {
-   const modal =  document.querySelectorAll('div.modal-container')[getIndex(e)];
-   modal.style.display = 'block';
-   
+function showModal(modal) {
+    modal.style.display = 'block';
+    modal.setAttribute('id', 'active' );
 }
 
-function closeModal() {
-    document.querySelectorAll('div.modal-container')
-        .forEach( modal => modal.style.display = 'none');
+function showModalOnClick(e) {
+   const modal =  document.querySelectorAll('div.modal-container')[getCardIndex(e)];
+   showModal(modal);   
 }
+
+function closeActiveModal() {
+    const activeModal = document.getElementById('active');
+    activeModal.style.display = 'none';
+    activeModal.removeAttribute('id');       
+}
+
+function getModalIndex() {
+    const  employeeArray = Array.from(document.querySelectorAll('div.modal-container'));
+    const employeeIndex = employeeArray.indexOf(document.querySelector('#active'));
+    return employeeIndex;
+}
+
+function nextModal() {
+    const nextModal =  document.querySelectorAll('div.modal-container')[getModalIndex() + 1];
+    closeActiveModal();
+    showModal(nextModal)
+}
+
+function prevModal() {
+    const prevModal =  document.querySelectorAll('div.modal-container')[getModalIndex() - 1];
+    closeActiveModal();
+    showModal(prevModal)
+}
+
