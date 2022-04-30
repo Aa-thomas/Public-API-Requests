@@ -1,27 +1,31 @@
-fetchData('https://randomuser.me/api/?results=12&nat=us');
-
-//fetches data from randomuser API
-function fetchData(url) {
-    return fetch(url)
-              .then(checkStatus)
-              .then( response => response.json() )
-              .then(data => {
-                  generateEmployees(data.results);
-                  generateModal(data.results);
-                  generateSearchBar(data.results); 
+/**
+ * Fetches random user data from the randomuser API
+ * @param {string} randomUserAPI - The url being requested
+ * @returns - A Promise object containing data from randomUserAPI that is used to generate employee information
+ */
+function getRandomUsers(randomUserAPI) {
+    return fetch(randomUserAPI)
+            .then(checkStatus)
+            .then( response => response.json() )
+            .then(data => {
+                generateEmployees(data.results);
+                generateModal(data.results);
+                generateSearchBar(data.results); 
             })
-              .catch( error => console.log('There was a problem with your request', error) );
+            .catch( error => console.log('There was a problem with your request', error) );
 }
 
 //checks status and handles errors
 function checkStatus(response) {
-    if (response.ok === true) {
-      return Promise.resolve(response) 
-    } else {
-      return Promise.reject( new Error(response.statusText) )
-    }
+return response.ok ?  Promise.resolve(response) : Promise.reject( new Error(response.statusText) )
 }
 
+getRandomUsers('https://randomuser.me/api/?results=12&nat=us');
+
+/**
+ * Generates employee cards that will display employee information and adds avent listeners
+ * @param {Array} data - An array of objects containing employee information
+ */
 function generateEmployees(data) {
     for(let i = 0; i < data.length; i++) {
         const gallery = `<div class="card">
@@ -40,6 +44,10 @@ function generateEmployees(data) {
         .forEach( card => card.addEventListener('click', (event) => showModalOnClick(event)))
 }
 
+/**
+ * Generates Modal for each employee and adds event listeners 
+ * @param {Array} data - An array of objects containing employee information
+ */
 function generateModal(data) {
     for(let i = 0; i < data.length; i++) {
         const modal = `<div class="modal-container">
@@ -63,117 +71,134 @@ function generateModal(data) {
             </div>`;
         document.querySelector('body').insertAdjacentHTML('beforeend', modal);
     }
+    // Event listener: Close Modal Button
     document.querySelectorAll('#modal-close-btn')
         .forEach( button => button.addEventListener('click', () => closeActiveModal() ) );
     
+    // Event listener: Next Modal Button
     document.querySelectorAll('#modal-next')
        .forEach( button => {button.addEventListener('click', () => nextModal() ) });
 
+     // Event listener: Previous Modal Button
     document.querySelectorAll('#modal-prev')
        .forEach( button => {button.addEventListener('click', () => prevModal() ) });
 
+     // Event listener: Arrow Keys 
     document.addEventListener('keyup', (e) => {
         if (document.getElementById('active-modal') !== null) {
             if (e.key === "ArrowRight") {
-                document.querySelector('#modal-next').click()
+                nextModal()
             }
             if (e.key === "ArrowLeft") {
-                document.querySelector('#modal-prev').click()
+                prevModal()
             }
         }
     })
     
+    //Hide all modals
     document.querySelectorAll('div.modal-container')
        .forEach( modal => modal.style.display = 'none');
     
 }
 
+/**
+ * Generates a searchbar 
+ * @param {*} data - An array of objects containing employee information
+ */
 function generateSearchBar(data) {
     const searchBar = `<form action="#" method="get">
         <input type="search" id="search-input" class="search-input" placeholder="Search...">
         <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
         </form>`;
     document.querySelector('div.search-container').insertAdjacentHTML('beforeend', searchBar);
-    
+   
+    // Event Listener: Search Button
     const searchButton = document.getElementById('search-submit');
-    let searchInput = document.getElementById('search-input');
-    
     searchButton.addEventListener('click', () => {
         searchFilter(data, searchInput.value );
         searchInput.value = '';
      });
-
-     searchInput.addEventListener('keyup', (e) => {
-        e.preventDefault();
+    
+     // Event Listener: Search Input
+    let searchInput = document.getElementById('search-input');
+     searchInput.addEventListener('keyup', () => {
         searchFilter(data, searchInput.value);
-        // //Search when enter key(13) is pressed
-        // if (e.keycode === 13) {
-        //    searchButton.click();
-        // }
-     });
+    });
 }
 
+
+/**
+ * Employee search function
+ * @param {Array} employeeList - An array of objects that the search will be performed on
+ * @param {string} searchQuery - The search term
+ */
 function searchFilter(employeeList, searchQuery) {
-        //Reset items on page
-        document.getElementById('gallery').innerHTML = '';
-        document.querySelectorAll('div.modal-container')
-            .forEach( modal => modal.remove() )
-
-        //Convert users search query to lowercase so that search can be case insensitive
-        searchQuery = searchQuery.toLowerCase();
-
-        // An empty array where search results will be pushed to
-        const searchResults = [];
+    const searchResults = [];
+    searchQuery = searchQuery.toLowerCase();
     
-        employeeList.forEach( employee =>  {
-            let employeeFullName = `${employee.name.first.toLowerCase()} ${employee.name.last.toLowerCase()}`;
+    document.getElementById('gallery').innerHTML = '';
+    document.querySelectorAll('div.modal-container')
+        .forEach( modal => modal.remove() );
 
-            if (employeeFullName.includes(searchQuery)) {
-              searchResults.push(employee);
-            }
-        })
+    employeeList.forEach( employee =>  {
+        let employeeFullName = `${employee.name.first.toLowerCase()} ${employee.name.last.toLowerCase()}`;
+        if (employeeFullName.includes(searchQuery)) {
+            searchResults.push(employee);
+        }
+    });
     generateEmployees(searchResults);
     generateModal(searchResults);
 }
 
+/**
+ * Modal Navigation and manipulation
+ */
+
+// Returns the index of employee card when clicked   
 function getCardIndex(e) {
     const  employeeCardArray = Array.from(document.querySelectorAll('div.card'));
     const employeeCardIndex = employeeCardArray.indexOf(e.target.closest('div.card'));
     return employeeCardIndex;
 }
 
-function showModal(modal) {
-    modal.style.display = 'block';
-    modal.setAttribute('id', 'active-modal' );
-}
-
-function showModalOnClick(e) {
-   const modal =  document.querySelectorAll('div.modal-container')[getCardIndex(e)];
-   showModal(modal);   
-}
-
-function closeActiveModal() {
-    const activeModal = document.getElementById('active-modal');
-    activeModal.style.display = 'none';
-    activeModal.removeAttribute('id');       
-}
-
+// Returns index of the modal that is currently being displayed
 function getModalIndex() {
     const  modalArray = Array.from(document.querySelectorAll('div.modal-container'));
     const modalIndex = modalArray.indexOf(document.getElementById('active-modal'));
     return modalIndex;
 }
 
+// Display modal window and set id attribute
+function showModal(modal) {
+    modal.style.display = 'block';
+    modal.setAttribute('id', 'active-modal' );
+}
+
+// Show modal when clicked
+function showModalOnClick(e) {
+   const modal =  document.querySelectorAll('div.modal-container')[getCardIndex(e)];
+   showModal(modal);   
+}
+
+// Close Modal and remove id attribute
+function closeActiveModal() {
+    const activeModal = document.getElementById('active-modal');
+    activeModal.style.display = 'none';
+    activeModal.removeAttribute('id');       
+}
+
+// Display the next modal
 function nextModal() {
     const nextModal =  document.querySelectorAll('div.modal-container')[getModalIndex() + 1];
     closeActiveModal();
-    showModal(nextModal)
+    showModal(nextModal);
 }
 
+// Display the previous modal
 function prevModal() {
     const prevModal =  document.querySelectorAll('div.modal-container')[getModalIndex() - 1];
     closeActiveModal();
-    showModal(prevModal)
+    showModal(prevModal);
 }
 
 
