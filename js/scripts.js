@@ -98,22 +98,22 @@ function generateModal(data) {
 
 	// Event listener: Next Modal Button
 	document.querySelectorAll('#modal-next').forEach((button) => {
-		button.addEventListener('click', () => next());
+		button.addEventListener('click', () => nextModal());
 	});
 
 	// Event listener: Previous Modal Button
 	document.querySelectorAll('#modal-prev').forEach((button) => {
-		button.addEventListener('click', () => prev());
+		button.addEventListener('click', () => prevModal());
 	});
 
 	// Event listener: Arrow Keys
 	document.addEventListener('keyup', (e) => {
 		if (document.getElementById('active-modal') !== null) {
 			if (e.key === 'ArrowRight') {
-				next();
+				nextModal();
 			}
 			if (e.key === 'ArrowLeft') {
-				prev();
+				prevModal();
 			}
 		}
 	});
